@@ -17,6 +17,7 @@ class TokenResponseSchema(BaseModel):
     token_type: str = "bearer"
     owner_name: str
     owner_email: str
+    robot_id: str = "RAFIKI-ROBOT-001"
 
 class RefreshTokenRequestSchema(BaseModel):
     refresh_token: str
@@ -40,6 +41,7 @@ class OwnerResponseSchema(BaseModel):
     id: int
     full_name: str
     email: str
+    robot_id: str = "RAFIKI-ROBOT-001"
     children: List[ChildResponseSchema] = []
 
     class Config:

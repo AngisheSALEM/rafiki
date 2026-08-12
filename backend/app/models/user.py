@@ -10,6 +10,7 @@ class OwnerModel(Base):
     full_name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    robot_id = Column(String, default="RAFIKI-ROBOT-001", nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Relationships

@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -9,7 +10,7 @@ router = APIRouter()
 
 @router.post("/register", response_model=TokenResponseSchema)
 def register_owner(payload: OwnerRegisterSchema, db: Session = Depends(get_db)):
-    """Registers a new Parent account in the database and returns JWT Access & Refresh Tokens."""
+    """Registers a new Parent account in the database and returns JWT Access & Refresh Tokens with linked Robot ID."""
     existing_user = db.query(OwnerModel).filter(OwnerModel.email == payload.email).first()
     if existing_user:
         raise HTTPException(
@@ -17,16 +18,18 @@ def register_owner(payload: OwnerRegisterSchema, db: Session = Depends(get_db)):
             detail="Un compte parent existe deja avec cet email."
         )
 
+    robot_id = f"RAFIKI-{uuid.uuid4().hex[:6].upper()}"
     new_owner = OwnerModel(
         full_name=payload.full_name,
         email=payload.email,
-        hashed_password=hash_password(payload.password)
+        hashed_password=hash_password(payload.password),
+        robot_id=robot_id
     )
     db.add(new_owner)
     db.commit()
     db.refresh(new_owner)
 
-    token_payload = {"sub": str(new_owner.id), "email": new_owner.email, "name": new_owner.full_name}
+    token_payload = {"sub": str(new_owner.id), "email": new_owner.email, "name": new_owner.full_name, "robot_id": new_owner.robot_id}
     access_token = create_access_token(data=token_payload)
     refresh_token = create_refresh_token(data=token_payload)
 
@@ -34,12 +37,13 @@ def register_owner(payload: OwnerRegisterSchema, db: Session = Depends(get_db)):
         access_token=access_token,
         refresh_token=refresh_token,
         owner_name=new_owner.full_name,
-        owner_email=new_owner.email
+        owner_email=new_owner.email,
+        robot_id=new_owner.robot_id
     )
 
 @router.post("/login", response_model=TokenResponseSchema)
 def login_owner(payload: OwnerLoginSchema, db: Session = Depends(get_db)):
-    """Authenticates a Parent and returns fresh JWT Access & Refresh Tokens."""
+    """Authenticates a Parent and returns fresh JWT Access & Refresh Tokens with linked Robot ID."""
     owner = db.query(OwnerModel).filter(OwnerModel.email == payload.email).first()
     if not owner or not verify_password(payload.password, owner.hashed_password):
         raise HTTPException(
@@ -47,7 +51,11 @@ def login_owner(payload: OwnerLoginSchema, db: Session = Depends(get_db)):
             detail="Email ou mot de passe incorrect."
         )
 
-    token_payload = {"sub": str(owner.id), "email": owner.email, "name": owner.full_name}
+    if not owner.robot_id:
+        owner.robot_id = f"RAFIKI-{uuid.uuid4().hex[:6].upper()}"
+        db.commit()
+
+    token_payload = {"sub": str(owner.id), "email": owner.email, "name": owner.full_name, "robot_id": owner.robot_id}
     access_token = create_access_token(data=token_payload)
     refresh_token = create_refresh_token(data=token_payload)
 
@@ -55,7 +63,8 @@ def login_owner(payload: OwnerLoginSchema, db: Session = Depends(get_db)):
         access_token=access_token,
         refresh_token=refresh_token,
         owner_name=owner.full_name,
-        owner_email=owner.email
+        owner_email=owner.email,
+        robot_id=owner.robot_id
     )
 
 @router.post("/refresh")

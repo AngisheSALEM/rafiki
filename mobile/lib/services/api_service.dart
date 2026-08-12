@@ -40,6 +40,7 @@ class ApiService {
           refreshToken: data["refresh_token"],
           parentName: data["owner_name"] ?? fullName,
           parentEmail: data["owner_email"] ?? email,
+          robotId: data["robot_id"],
         );
         return {"success": true, "data": data};
       } else {
@@ -73,6 +74,7 @@ class ApiService {
           refreshToken: data["refresh_token"],
           parentName: data["owner_name"] ?? "Parent Rafiki",
           parentEmail: data["owner_email"] ?? email,
+          robotId: data["robot_id"],
         );
         return {"success": true, "data": data};
       } else {
