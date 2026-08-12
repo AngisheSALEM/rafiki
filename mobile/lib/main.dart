@@ -5,7 +5,6 @@ import 'services/tts_service.dart';
 import 'services/stt_service.dart';
 import 'services/raspberry_service.dart';
 import 'services/token_service.dart';
-import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/home_dashboard/screens/home_dashboard_screen.dart';
 import 'features/voice_interaction/screens/rafiki_mouth_screen.dart';
 import 'features/raspberry_connect/screens/pi_pairing_screen.dart';
@@ -49,7 +48,6 @@ class MainNavigationShell extends StatefulWidget {
 }
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
-  bool _hasCompletedOnboarding = false;
   bool _isLoggedIn = false;
   String _parentName = "Parent Rafiki";
   int _currentIndex = 0;
@@ -83,16 +81,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_hasCompletedOnboarding) {
-      return OnboardingScreen(
-        onGetStarted: () {
-          setState(() {
-            _hasCompletedOnboarding = true;
-          });
-        },
-      );
-    }
-
     final List<Widget> screens = [
       HomeDashboardScreen(
         onStartTalk: () => setState(() => _currentIndex = 1),
